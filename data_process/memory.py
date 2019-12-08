@@ -29,7 +29,7 @@ class Reducer:
     """
     memory_scale_factor = 1024**2  # memory in MB
 
-    def __init__(self, conv_table=None, use_categoricals=False, n_jobs=-1):
+    def __init__(self, conv_table=None, use_categoricals=False,round_up = False ,n_jobs=-1):
         """
         :param conv_table: dict with np.dtypes-strings as keys
         :param use_categoricals: Whether the new pandas dtype "Categoricals"
@@ -76,7 +76,11 @@ class Reducer:
         if np.issubdtype(coltype, np.integer):
             conv_key = 'int' if s.min() < 0 else 'uint'
         elif np.issubdtype(coltype, np.floating):
-            conv_key = 'float'
+            if round_up:
+                s = s.round()
+                conv_key = 'int' if s.min() < 0 else 'uint'
+            else:
+                conv_key = 'float'
         else:
             if isinstance(coltype, object) and self.use_categoricals:
                 # check for all-strings series
