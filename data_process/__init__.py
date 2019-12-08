@@ -40,7 +40,7 @@ def measure_time_mem(func):
         print("___MEMORY USAGE AFTER COMPLETION:___")
         print(f'reduced df from {mem_usage_orig:.4f} MB '
               f'to {mem_usage_new:.4f} MB ')
-        print("This is ",100*mem_usage_orig/mem_usage_new,"% of the initial size")
+        print("This is ",100*mem_usage_new/mem_usage_orig,"% of the initial size")
         gc.collect()
         return ret
     return wrapped_reduce
