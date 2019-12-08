@@ -42,6 +42,7 @@ class Reducer:
                            'uint': [np.uint8, np.uint16, np.uint32, np.uint64],
                            'float': [np.float32, ]}
         self.use_categoricals = use_categoricals
+        self.round_up= round_up
         self.n_jobs = n_jobs
 
     def _type_candidates(self, k):
@@ -76,7 +77,7 @@ class Reducer:
         if np.issubdtype(coltype, np.integer):
             conv_key = 'int' if s.min() < 0 else 'uint'
         elif np.issubdtype(coltype, np.floating):
-            if round_up:
+            if self.round_up:
                 s = s.round()
                 conv_key = 'int' if s.min() < 0 else 'uint'
             else:
