@@ -46,4 +46,4 @@ Thumbs.db
 /NLP
 
 # Ignore Developing file
-*_.py
+*(working).py
