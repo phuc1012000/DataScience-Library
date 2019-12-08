@@ -3,6 +3,9 @@ import os
 import pandas as pd
 import numpy as np
 
+import gc
+from joblib import Parallel, delayed
+
 
 #-------------------- READ CSV FILE ----------------------
 def read_csv(csv_file_path,frac = False,random_state =42,drop_index= False):
@@ -24,71 +27,101 @@ def read_csv(csv_file_path,frac = False,random_state =42,drop_index= False):
     else:
         print("Missing csv file")
 
-def reduce_mem_usage(df, verbose = False):
-    start_mem_usg = df.memory_usage().sum() / 1024**2
-    print("Memory usage of properties dataframe is :",start_mem_usg," MB")
-    NAlist = [] # Keeps track of columns that have missing values filled in.
-    for col in df.columns:
-        if df[col].dtype != object:  # Exclude strings
 
-            # Print current column type
-            if verbose:
-                print("Column: ",col)
-                print("dtype before: ",df[col].dtype)
-
-            # make variables for Int, max and min
-            IsInt = False
-            mx = df[col].max()
-            mn = df[col].min()
-
-            # Integer does not support NA, therefore, NA needs to be filled
-            if not np.isfinite(df[col]).all():
-                NAlist.append(col)
-                df[col].fillna(mn-1,inplace=True)
-
-            # test if column can be converted to an integer
-            asint = df[col].fillna(0).astype(np.int64)
-            result = (df[col] - asint)
-            result = result.sum()
-            if result > -0.01 and result < 0.01:
-                IsInt = True
+################ Reduce Mem
+def measure_time_mem(func):
+    def wrapped_reduce(self, df, *args, **kwargs):
+        # pre
+        mem_usage_orig = df.memory_usage().sum() / self.memory_scale_factor
+        # exec
+        ret = func(self, df, *args, **kwargs)
+        # post
+        mem_usage_new = ret.memory_usage().sum() / self.memory_scale_factor
+        print("___MEMORY USAGE AFTER COMPLETION:___")
+        print(f'reduced df from {mem_usage_orig:.4f} MB '
+              f'to {mem_usage_new:.4f} MB ')
+        print("This is ",100*mem_usage_orig/mem_usage_new,"% of the initial size")
+        gc.collect()
+        return ret
+    return wrapped_reduce
 
 
-            # Make Integer/unsigned Integer datatypes
-            if IsInt:
-                if mn >= 0:
-                    if mx < 255:
-                        df[col] = df[col].astype(np.uint8)
-                    elif mx < 65535:
-                        df[col] = df[col].astype(np.uint16)
-                    elif mx < 4294967295:
-                        df[col] = df[col].astype(np.uint32)
-                    else:
-                        df[col] = df[col].astype(np.uint64)
-                else:
-                    if mn > np.iinfo(np.int8).min and mx < np.iinfo(np.int8).max:
-                        df[col] = df[col].astype(np.int8)
-                    elif mn > np.iinfo(np.int16).min and mx < np.iinfo(np.int16).max:
-                        df[col] = df[col].astype(np.int16)
-                    elif mn > np.iinfo(np.int32).min and mx < np.iinfo(np.int32).max:
-                        df[col] = df[col].astype(np.int32)
-                    elif mn > np.iinfo(np.int64).min and mx < np.iinfo(np.int64).max:
-                        df[col] = df[col].astype(np.int64)
+class Reducer:
+    """
+    Class that takes a dict of increasingly big numpy datatypes to transform
+    the data of a pandas dataframe into, in order to save memory usage.
+    """
+    memory_scale_factor = 1024**2  # memory in MB
 
-            # Make float datatypes 32 bit
-            else:
-                df[col] = df[col].astype(np.float32)
+    def __init__(self, conv_table=None, use_categoricals=False, n_jobs=-1):
+        """
+        :param conv_table: dict with np.dtypes-strings as keys
+        :param use_categoricals: Whether the new pandas dtype "Categoricals"
+                shall be used
+        :param n_jobs: Parallelization rate
+        """
 
-            # Print new column type
-            if verbose:
-                print("dtype after: ",df[col].dtype)
-                print("******************************")
+        self.conversion_table = \
+            conv_table or {'int': [np.int8, np.int16, np.int32, np.int64],
+                           'uint': [np.uint8, np.uint16, np.uint32, np.uint64],
+                           'float': [np.float32, ]}
+        self.use_categoricals = use_categoricals
+        self.n_jobs = n_jobs
 
-    # Print final result
-    print("___MEMORY USAGE AFTER COMPLETION:___")
-    mem_usg = df.memory_usage().sum() / 1024**2
-    print("Memory usage is: ",mem_usg," MB")
-    print("This is ",100*mem_usg/start_mem_usg,"% of the initial size")
+    def _type_candidates(self, k):
+        for c in self.conversion_table[k]:
+            i = np.iinfo(c) if 'int' in k else np.finfo(c)
+            yield c, i
+
+    @measure_time_mem
+    def reduce(self, df, verbose=True):
+        """Takes a dataframe and returns it with all data transformed to the
+        smallest necessary types.
+
+        :param df: pandas dataframe
+        :param verbose: If True, outputs more information
+        :return: pandas dataframe with reduced data types
+        """
+        ret_list = Parallel(n_jobs=self.n_jobs)(delayed(self._reduce)
+                                                (df[c], c, verbose) for c in
+                                                df.columns)
+
+        del df
+        gc.collect()
+        return pd.concat(ret_list, axis=1)
+
+    def _reduce(self, s, colname, verbose):
+        # skip NaNs
+        if s.isnull().any():
+            if verbose: print(f'{colname} has NaNs - Skip..')
+            return s
+        # detect kind of type
+        coltype = s.dtype
+        if np.issubdtype(coltype, np.integer):
+            conv_key = 'int' if s.min() < 0 else 'uint'
+        elif np.issubdtype(coltype, np.floating):
+            conv_key = 'float'
+        else:
+            if isinstance(coltype, object) and self.use_categoricals:
+                # check for all-strings series
+                if s.apply(lambda x: isinstance(x, str)).all():
+                    if verbose: print(f'convert {colname} to categorical')
+                    return s.astype('category')
+            if verbose: print(f'{colname} is {coltype} - Skip..')
+            return s
+        # find right candidate
+        for cand, cand_info in self._type_candidates(conv_key):
+            if s.max() <= cand_info.max and s.min() >= cand_info.min:
+                if verbose: print(f'convert {colname} to {cand}')
+                return s.astype(cand)
+
+        # reaching this code is bad. Probably there are inf, or other high numbs
+        print(f"WARNING: {colname} doesn't fit the grid with \nmax: {s.max()} "
+              f"and \nmin: {s.min()}")
+        print('Dropping it..')
+
+
+
 
 #------------------- Anomalies ---------------------#
 
