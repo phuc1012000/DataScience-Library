@@ -1,8 +1,7 @@
 import  zipfile
 import os
-from phuc import data_process
+from phuc.data_process import memory
 import pickle
-
 
 
 def _unzip(root,file,unzip_file_dir,recursive,delete):
@@ -55,7 +54,6 @@ def delete_file(path):
     else:
         print("The file does not exist")
 
-##############
 
 
 def save_pickle(pickle_save_path,file,reduce_mem_usage =[None, False, -2], remove_memory = False ):
@@ -64,7 +62,7 @@ def save_pickle(pickle_save_path,file,reduce_mem_usage =[None, False, -2], remov
     create_dir(pickle_save_dir)
 
     if reduce_mem_usage is not None :
-        file = data_process.Reducer(reduce_mem_usage).reduce(file)
+        file = memory.Reducer(reduce_mem_usage).reduce(file)
 
     with open(pickle_save_path, 'wb') as f:
         pickle.dump(file, f)
