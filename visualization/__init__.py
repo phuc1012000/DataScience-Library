@@ -4,7 +4,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
 
-
 ### distribution ###
 def distribution(df,columns = None, column_fig = 2 , figsize=(18,4),color = None, compare = None):
 
