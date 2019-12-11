@@ -185,19 +185,27 @@ def heatmap(x, y,figsize = (10,10) ,title = "HEATMAP", **kwargs):
     plt.figure()
 
 ### corrplot ###
-def corrplot(data, size_scale=500, marker='s', method=None, figsize= (10,10), title= "correlation Matrix"):
+def corrplot(
+        data,
+        size_scale=500,
+        marker='s',
+        method=None,
+        figsize= (10,10),
+        title= "correlation Matrix",
+        palette=sns.diverging_palette(20, 220, n=256),
+        color_range=[-1, 1]):
     if method is None:
         data = data.corr()
     else:
-        data = data.corr()
+        data = data.corr(method)
     corr = pd.melt(data.reset_index(), id_vars='index')
     corr.columns = ['x', 'y', 'value']
     heatmap(
         corr['x'], corr['y'],
         figsize = figsize,
         title = title,
-        color=corr['value'], color_range=[-1, 1],
-        palette=sns.diverging_palette(20, 220, n=256),
+        color=corr['value'], color_range=color_range,
+        palette=palette,
         size=corr['value'].abs(), size_range=[0,1],
         marker=marker,
         x_order=data.columns,
