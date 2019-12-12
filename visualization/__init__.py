@@ -75,7 +75,7 @@ def heatmap(x, y = None,figsize = (10,10) ,title = "HEATMAP", **kwargs):
         data = pd.melt(x.reset_index(), id_vars='index')
         data.columns = ['x', 'y', 'value']
         x = data['x']
-        y = data['y'] 
+        y = data['y']
 
     if 'color' in kwargs:
         color = kwargs['color']
@@ -243,7 +243,45 @@ def percentage(ax, total):
         y = p.get_y() + p.get_height()/2
         ax.annotate(percentage, (x, y))
 
+def _prepare_plot_dict(df, col, hue, df_col_count):
+    """
+    Preparing dictionary with data for plotting.
 
+    I want to show how much higher/lower are the rates of Adoption speed for the current column comparing to base values (as described higher),
+    At first I calculate base rates, then for each category in the column I calculate rates of Adoption speed and find difference with the base rates.
+
+    """
+    df_col_count = dict(df_col_count)
+    plot_dict = {}
+    for i in df[col].unique():
+        val_count = dict(df.loc[df[col] == i, hue].value_counts().sort_index())
+
+        for k, v in df_col_count.items():
+            if k in val_count:
+                plot_dict[val_count[k]] = ((val_count[k] / sum(val_count.values())) / df_col_count[k]) * 100 - 100
+            else:
+                plot_dict[0] = 0
+
+    return plot_dict
+
+def compare_count_plot(df, column, hue, title=''):
+    """
+    Plotting countplot with correct annotations.
+    """
+    df_col_count = df[hue].value_counts(normalize=True).sort_index()
+
+    g = sns.countplot(x=column, data=df, hue=hue);
+    plt.title(f' {title}');
+    ax = g.axes
+
+    plot_dict = _prepare_plot_dict(df, column, hue,df_col_count)
+
+    for p in ax.patches:
+        h = p.get_height() if str(p.get_height()) != 'nan' else 0
+        text = f"{plot_dict[h]:.0f}%" if plot_dict[h] < 0 else f"+{plot_dict[h]:.0f}%"
+        ax.annotate(text, (p.get_x() + p.get_width() / 2., h),
+             ha='center', va='center', fontsize=11, color='green' if plot_dict[h] > 0 else 'red', rotation=0, xytext=(0, 10),
+             textcoords='offset points')
 ############################
 """
 ### COMPARE_FIG ###
