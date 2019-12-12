@@ -67,9 +67,15 @@ def distribution(df,columns = None, column_fig = 2 , figsize=(18,4),color = None
 
 
 ### HEATMAP ###
-def heatmap(x, y,figsize = (10,10) ,title = "HEATMAP", **kwargs):
+def heatmap(x, y = None,figsize = (10,10) ,title = "HEATMAP", **kwargs):
 
     plt.figure(figsize=figsize)
+
+    if y is None:
+        data = pd.melt(x.reset_index(), id_vars='index')
+        data.columns = ['x', 'y', 'value']
+        x = data['x']
+        y = data['y'] 
 
     if 'color' in kwargs:
         color = kwargs['color']
@@ -193,6 +199,7 @@ def corrplot(
         figsize= (10,10),
         title= "correlation Matrix",
         palette=sns.diverging_palette(20, 220, n=256),
+        size_range  =[0,1],
         color_range=[-1, 1]):
     if method is None:
         data = data.corr()
@@ -206,7 +213,7 @@ def corrplot(
         title = title,
         color=corr['value'], color_range=color_range,
         palette=palette,
-        size=corr['value'].abs(), size_range=[0,1],
+        size=corr['value'].abs(), size_range = size_range,
         marker=marker,
         x_order=data.columns,
         y_order=data.columns[::-1],
