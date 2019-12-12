@@ -264,10 +264,12 @@ def _prepare_plot_dict(df, col, hue, df_col_count):
 
     return plot_dict
 
-def compare_count_plot(df, column, hue, title=''):
+def compare_count_plot(df, column, hue, title=None):
     """
     Plotting countplot with correct annotations.
     """
+    if title is None:
+        title = f"Compare {hue} by {column}"
     df_col_count = df[hue].value_counts(normalize=True).sort_index()
 
     g = sns.countplot(x=column, data=df, hue=hue);
