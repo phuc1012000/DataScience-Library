@@ -6,8 +6,6 @@
 *.exe
 *.o
 *.so
-*.pyc
-*.pyo
 *~
 *.bak
 *.swp
@@ -42,8 +40,6 @@ ehthumbs.db
 Thumbs.db
 
 # Ignore Developing Folder
-/CV
-/NLP
+
 
 # Ignore Developing file
-*(working).py

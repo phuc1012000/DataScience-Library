@@ -25,6 +25,20 @@ def read_csv(csv_file_path,frac = False,random_state =42,drop_index= False):
         print("Missing csv file")
 
 
+def print_df(df, _list = None, index = True):
+
+    if _list is None:
+        _list = range(len(df))
+
+    try:
+        if  index:
+            for i in _list:
+                print('{:6} :   {}'.format(df.index[i], df.iloc[i]))
+        else:
+            for i in _list:
+                print(df.iloc[i])
+    except:
+        print(f'{i} is out of index')
 #------------------- Anomalies ---------------------#
 
 def _std_cut_off(df, return_outliers = False):
