@@ -46,9 +46,9 @@ def distribution(df,columns = None, column_fig = 2 , figsize=(18,4),color = None
                 sns.distplot(amount_val, ax=ax[column_fig_index],color = color[column_fig_index])
 
             if compare and column_fig_index  < column_fig -1:
-                ax[column_fig_index].set_title('Distribution of '+ columns[num_ax] +' of Class: ' + str(label[column_fig_index]))
+                ax[column_fig_index].set_title('Distribution of '+ str(columns[num_ax]) +' of Class: ' + str(label[column_fig_index]))
             else:
-                ax[column_fig_index].set_title('Distribution of '+ columns[num_ax])
+                ax[column_fig_index].set_title('Distribution of '+ str(columns[num_ax]))
 
             ax[column_fig_index].set_xlim([min(amount_val), max(amount_val)])
 
@@ -67,15 +67,9 @@ def distribution(df,columns = None, column_fig = 2 , figsize=(18,4),color = None
 
 
 ### HEATMAP ###
-def heatmap(x, y = None,figsize = (10,10) ,title = "HEATMAP", **kwargs):
+def _heatmap(x, y ,figsize = (10,10) ,title = "HEATMAP", **kwargs):
 
     plt.figure(figsize=figsize)
-
-    if y is None:
-        data = pd.melt(x.reset_index(), id_vars='index')
-        data.columns = ['x', 'y', 'value']
-        x = data['x']
-        y = data['y']
 
     if 'color' in kwargs:
         color = kwargs['color']
@@ -190,6 +184,30 @@ def heatmap(x, y = None,figsize = (10,10) ,title = "HEATMAP", **kwargs):
     plt.title(title)
     plt.figure()
 
+def heatmap(
+        data,
+        size_scale=500,
+        marker='s',
+        figsize= (10,10),
+        title= "correlation Matrix",
+        palette=sns.diverging_palette(20, 220, n=256),
+        size_range  =[0,1],
+        color_range=[-1, 1]):
+    corr = pd.melt(data.reset_index(), id_vars='index')
+    corr.columns = ['x', 'y', 'value']
+    _heatmap(
+        corr['x'], corr['y'],
+        figsize = figsize,
+        title = title,
+        color=corr['value'], color_range=color_range,
+        palette=palette,
+        size=corr['value'].abs(), size_range = size_range,
+        marker=marker,
+        x_order=data.columns,
+        y_order=data.columns[::-1],
+        size_scale=size_scale
+    )
+
 ### corrplot ###
 def corrplot(
         data,
@@ -207,7 +225,7 @@ def corrplot(
         data = data.corr(method)
     corr = pd.melt(data.reset_index(), id_vars='index')
     corr.columns = ['x', 'y', 'value']
-    heatmap(
+    _heatmap(
         corr['x'], corr['y'],
         figsize = figsize,
         title = title,

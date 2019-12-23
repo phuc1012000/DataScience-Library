@@ -40,8 +40,12 @@
 ehthumbs.db
 Thumbs.db
 
-# Ignore Developing Folder
+# Ignore Folder
 
 
 # Ignore Developing file
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes

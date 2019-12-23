@@ -39,6 +39,16 @@ def print_df(df, _list = None, index = True):
                 print(df.iloc[i])
     except:
         print(f'{i} is out of index')
+
+
+def safe_get(data, *keys):
+    try:
+        current = data
+        for key in keys:
+            current = current[key]
+    except:
+        current = None
+    return current   
 #------------------- Anomalies ---------------------#
 
 def _std_cut_off(df, return_outliers = False):
