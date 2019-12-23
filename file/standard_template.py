@@ -6,7 +6,10 @@ def save_data_path(PROJECT_DIR=os.getcwd().split('/src')[0],
                    endswith=['csv', 'pkl'],
                    ignore_dir=['.git', '.ipynb_checkpoints', '.gitignore']):
 
-    DATA_DIR = {'DATA_DIR': PROJECT_DIR + '/data_path.pkl'}
+    if os.path.isfile(DATA_DIR['DATA_DIR']):
+        DATA_DIR = file.load_pickle(DATA_DIR['DATA_DIR'])
+    else:
+        DATA_DIR = {'DATA_DIR': PROJECT_DIR + '/data_path.pkl'}
 
     def _ignore(dirpath):
         for ignore in ignore_dir:
@@ -49,5 +52,5 @@ def save_data_path(PROJECT_DIR=os.getcwd().split('/src')[0],
 
                     key = (file_name + '_path').upper().replace('.', '_')
                     DATA_DIR[key] = file_path
-
+ 
     file.save_pickle(DATA_DIR['DATA_DIR'], DATA_DIR)
