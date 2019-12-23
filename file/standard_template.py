@@ -30,7 +30,6 @@ def save_data_path(PROJECT_DIR=os.getcwd().split('/src')[0],
                 continue
 
             file_names = os.listdir(full_dir)
-            print(full_dir)
             if len(file_names) == 0:
                 key = (dirname + '_dir').upper()
                 DATA_DIR[key] = full_dir
@@ -42,6 +41,10 @@ def save_data_path(PROJECT_DIR=os.getcwd().split('/src')[0],
                 for file_name in file_names:
                     file_path = os.path.join(full_dir, file_name)
                     if _check_unwanted(file_path, file_name):
+                        if os.path.isfile(file_path):
+                            key = (dirname + '_dir').upper()
+                            DATA_DIR[key] = full_dir
+                            break
                         continue
 
                     key = (file_name + '_path').upper().replace('.', '_')
