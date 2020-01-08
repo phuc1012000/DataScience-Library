@@ -88,13 +88,15 @@ def _create_bins(df,category,n_bins):
 
     return bins, n_bins
 
-def create_bins(df, n_bins = 3,right = False, return_bins = False):
+def create_bins(df,bins = None ,n_bins = 3,right = False, return_bins = False):
 
-    category = n_bins
-    bins = []
-    df = df.sort_values()
+    if bins is None:
+        category = n_bins
+        bins = []
+        df_sorted = df.sort_values()
 
-    bins, n_bins = _create_bins(df,category,n_bins)
+        bins, n_bins = _create_bins(df_sorted,category,n_bins)
+
     df = pd.cut(df, bins=bins, right=right, duplicates='drop').cat.codes
 
     if return_bins:
