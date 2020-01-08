@@ -48,7 +48,7 @@ def safe_get(data, *keys):
             current = current[key]
     except:
         current = None
-    return current   
+    return current
 #------------------- Anomalies ---------------------#
 
 def _std_cut_off(df, return_outliers = False):
@@ -71,3 +71,33 @@ def find_anomalies(df, columns = None, return_outliers = False):
     else:
         for column in columns:
             _std_cut_off(df[column], return_outliers)
+
+# ------------------------ Create BINS -------------------------
+
+def _create_bins(df,category,n_bins):
+    global bins
+
+    bins = np.unique(df.quantile(np.linspace(0, 1, n_bins)).values.astype(int))
+
+    if category > len(bins) -1:
+        n_bins += 5
+        _create_bins(df,category,n_bins)
+    elif category < len(bins) -1:
+        n_bins -= 1
+        _create_bins(df,category,n_bins)
+
+    return bins, n_bins
+
+def create_bins(df, n_bins = 3,right = False, return_bins = False):
+
+    category = n_bins
+    bins = []
+    df = df.sort_values()
+
+    bins, n_bins = _create_bins(df,category,n_bins)
+    df = pd.cut(df, bins=bins, right=right, duplicates='drop').cat.codes
+
+    if return_bins:
+        return df, bins, n_bins
+    else:
+        return df
