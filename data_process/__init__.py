@@ -33,7 +33,7 @@ def print_df(df, _list = None, index = True):
     try:
         if  index:
             for i in _list:
-                print('{:6} :   {}'.format(df.index[i], df.iloc[i]))
+                print('{:10} :   {}'.format(df.index[i], df.iloc[i]))
         else:
             for i in _list:
                 print(df.iloc[i])
