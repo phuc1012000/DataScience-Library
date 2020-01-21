@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 import numpy as np
-
+from IPython.display import display
 
 #-------------------- READ CSV FILE ----------------------
 def read_csv(csv_file_path,frac = False,random_state =42,drop_index= False):
