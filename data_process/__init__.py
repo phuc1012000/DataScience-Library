@@ -77,7 +77,7 @@ def find_anomalies(df, columns = None, return_outliers = False):
 def _create_bins(df,category,n_bins):
     global bins
 
-    bins = np.unique(df.quantile(np.linspace(0, 1, n_bins)).values.astype(int))
+    bins = np.unique(df.quantile(np.linspace(0, 1, n_bins)).values)
 
     if category > len(bins) -1:
         n_bins += 5
