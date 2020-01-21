@@ -40,15 +40,12 @@ def print_df(df, _list = None, index = True):
     except:
         print(f'{i} is out of index')
 
+def show(df,feature):
+    print(feature)
+    print(df[feature].nunique())
+    display(df[feature].value_counts().sort_index())
+    print("NaN:",df[feature].isna().sum())
 
-def safe_get(data, *keys):
-    try:
-        current = data
-        for key in keys:
-            current = current[key]
-    except:
-        current = None
-    return current
 #------------------- Anomalies ---------------------#
 
 def _std_cut_off(df, return_outliers = False):
