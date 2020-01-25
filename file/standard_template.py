@@ -10,6 +10,11 @@ def save_data_path(PROJECT_DIR=os.getcwd().split('/src')[0],
 
     if  os.path.isfile(data_path):
         DATA_DIR = file.load_pickle(data_path)
+
+        # remove missing file
+        for key, value in DATA_DIR.items():
+            if not os.path.isfile(value):
+                del(DATA_DIR[key])
     else:
         DATA_DIR = {'PROJECT_DIR': PROJECT_DIR}
 
