@@ -12,9 +12,14 @@ def save_data_path(PROJECT_DIR=os.getcwd().split('/src')[0],
         DATA_DIR = file.load_pickle(data_path)
 
         # remove missing file
+        missing_files = []
         for key, value in DATA_DIR.items():
             if not os.path.isfile(value):
-                del(DATA_DIR[key])
+                missing_files.append(key)
+
+        for missing_file in missing_files:
+            del(DATA_DIR[missing_file])
+
     else:
         DATA_DIR = {'PROJECT_DIR': PROJECT_DIR}
 

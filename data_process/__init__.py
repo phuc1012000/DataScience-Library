@@ -46,6 +46,20 @@ def show(df,feature):
     display(df[feature].value_counts().sort_index())
     print("NaN:",df[feature].isna().sum())
 
+def nan_counts(df):
+
+    nan_count_rows = df.isna().sum(axis=1)
+    nan_counts = nan_count_test.unique()
+    nan_counts.sort()
+    columns = df.columns
+
+    for nan_count in nan_counts:
+        nan_rows = df.loc[nan_count_rows == nan_count]
+        missing_column = columns[nan_rows.isna().sum() > 0]
+        print(f'NAN_columns: {len(missing_column)}/{nan_count},Counts :{nan_rows.shape[0]}')
+        print(missing_column)
+        print()
+
 #------------------- Anomalies ---------------------#
 
 def _std_cut_off(df, return_outliers = False):
