@@ -49,16 +49,21 @@ def show(df,feature):
 def nan_counts(df):
 
     nan_count_rows = df.isna().sum(axis=1)
-    nan_counts = nan_count_test.unique()
+    nan_counts = nan_count_rows.unique()
     nan_counts.sort()
     columns = df.columns
 
     for nan_count in nan_counts:
         nan_rows = df.loc[nan_count_rows == nan_count]
         missing_column = columns[nan_rows.isna().sum() > 0]
-        print(f'NAN_columns: {len(missing_column)}/{nan_count},Counts :{nan_rows.shape[0]}')
+        print(f'NAN_columns: {len(missing_column)}/{nan_count} ,Counts :{nan_rows.shape[0]}')
         print(missing_column)
         print()
+
+def isin_row(a, b, cols=None):
+    cols = cols or a.columns
+    return reduce(lambda x, y:x&y, [a[f].isin(b[f]) for f in cols])
+
 
 #------------------- Anomalies ---------------------#
 
