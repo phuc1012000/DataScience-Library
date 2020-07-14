@@ -1,28 +1,32 @@
 import os
 from phuc import file
 
-def save_data_path(PROJECT_DIR=os.getcwd().split('/src')[0],
-                   endswith=['csv', 'pkl'],
-                   ignore_dir=['.git', '.ipynb_checkpoints', '.gitignore']):
+def save_data_path(PROJECT_DIR= os.getcwd().split('/src')[0],
+                   ignore_dir = [],
+                   endswith=['csv', 'pkl']):
+
+    def _ignore(dirname):
+        if dirname.startswith("."): return True
+        if dirname in ignore_dir: return True
+
+        return False
+
+    def _check_unwanted(file_path):
+        if os.path.isfile(file_path):
+            for end in endswith:
+                if file_path.endswith(end): return False
+        return True
+
+
+    if not (isinstance(PROJECT_DIR,str)):
+        raise TypeError("Expect path is string")
+
+    elif not (os.path.exists(PROJECT_DIR)):
+        raise ValueError("Path not exist")
 
     data_path = PROJECT_DIR + '/data_path.pkl'
 
-    def _ignore(dirpath):
-        for ignore in ignore_dir:
-            if ignore in dirpath:
-                return True
-        return False
-
-    def _check_unwanted(file_path, file_name):
-        if os.path.isfile(file_path):
-            for end in endswith:
-                if file_name.endswith(end):
-                    return False
-            return True
-        else:
-            return True
-
-    if  os.path.exists(data_path):
+    if os.path.exists(data_path):
         DATA_DIR = file.load_pickle(data_path)
 
         # remove missing file
@@ -34,50 +38,39 @@ def save_data_path(PROJECT_DIR=os.getcwd().split('/src')[0],
         for missing_file in missing_files:
             del(DATA_DIR[missing_file])
 
+        del(missing_files)
+
     else:
-        DATA_DIR = {'PROJECT_DIR': PROJECT_DIR}
-        DATA_DIR['OUTPUTS'] = PROJECT_DIR + '/outputs'
+        print("Missing data_path.pkl")
+        print("Generate new data_path.pkl")
 
-    # scan /data
-    for dirpath, dirnames, _ in os.walk(PROJECT_DIR + '/data'):
-        for dirname in dirnames:
-            full_dir = os.path.join(dirpath, dirname)
-            if _ignore(full_dir):
+        DATA_DIR = {
+                    'DIRS':{'PROJECT_DIR': PROJECT_DIR},
+                    'FILES':{}
+                    }
+
+    for scan_file in ['/data','/outputs'] :
+        for dirpath, _ , filenames in os.walk(PROJECT_DIR + scan_file):
+            dirname = dirpath.split("/")[-1]
+
+            if _ignore(dirname):
                 continue
 
-            file_names = os.listdir(full_dir)
-            if len(file_names) == 0:
-                key = (dirname + '_dir').upper()
-                DATA_DIR[key] = full_dir
-            elif len(file_names) == 1 and _ignore(file_names[0]):
-                key = (dirname + '_dir').upper()
-                DATA_DIR[key] = full_dir
+            key = (dirname + '_dir').upper()
 
+            if key in DATA_DIR['DIRS'].keys(): # check duplicate new name
+                if (DATA_DIR['DIRS'][key] != dirpath):
+                    print("Duplicate Name", key)
+                    print(dirpath)
+                    print(DATA_DIR['DIRS'][key])
             else:
-                for file_name in file_names:
-                    file_path = os.path.join(full_dir, file_name)
-                    if _check_unwanted(file_path, file_name):
-                        if os.path.isfile(file_path):
-                            key = (dirname + '_dir').upper()
-                            DATA_DIR[key] = full_dir
-                            break
-                        continue
+                DATA_DIR['DIRS'][key] = dirpath
 
+            for file_name in filenames:
+                file_path = os.path.join(dirpath, file_name)
+                if not _check_unwanted(file_path):
+                    # change the end name . to _
                     key = (file_name + '_path').upper().replace('.', '_')
-                    DATA_DIR[key] = file_path
-    # scan outputs
-    for dirpath, dirnames, _ in os.walk(PROJECT_DIR + '/outputs'):
-        for dirname in dirnames:
-            full_dir = os.path.join(dirpath, dirname)
-            if _ignore(full_dir):
-                continue
-
-            file_names = os.listdir(full_dir)
-            if len(file_names) == 0:
-                key = (dirname + '_dir').upper()
-                DATA_DIR[key] = full_dir
-            elif len(file_names) == 1 and _ignore(file_names[0]):
-                key = (dirname + '_dir').upper()
-                DATA_DIR[key] = full_dir
+                    DATA_DIR['FILES'][key] = file_path
 
     file.save_pickle(data_path, DATA_DIR)
