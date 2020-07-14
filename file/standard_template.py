@@ -31,12 +31,14 @@ def save_data_path(PROJECT_DIR= os.getcwd().split('/src')[0],
 
         # remove missing file
         missing_files = []
-        for key, value in DATA_DIR.items():
-            if not os.path.exists(value):
-                missing_files.append(key)
+        for keys in DATA_DIR.keys():
+            for key, value in DATA_DIR[keys].items():
+                if not os.path.exists(value):
+                    missing_files.append(key)
 
-        for missing_file in missing_files:
-            del(DATA_DIR[missing_file])
+        for keys in DATA_DIR.keys():
+            for missing_file in missing_files:
+                del(DATA_DIR[keys][missing_file])
 
         del(missing_files)
 
