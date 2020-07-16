@@ -30,14 +30,14 @@ def save_data_path(PROJECT_DIR= os.getcwd().split('/src')[0],
         DATA_DIR = file.load_pickle(data_path)
 
         # remove missing file
-        missing_files = []
+        missing_files = {'DIRS':[],'FILES':[]}
         for keys in DATA_DIR.keys():
             for key, value in DATA_DIR[keys].items():
                 if not os.path.exists(value):
-                    missing_files.append(key)
+                    missing_files[keys].append(key)
 
         for keys in DATA_DIR.keys():
-            for missing_file in missing_files:
+            for missing_file in missing_files[keys]:
                 del(DATA_DIR[keys][missing_file])
 
         del(missing_files)
